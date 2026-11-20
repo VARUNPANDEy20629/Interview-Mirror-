@@ -3,7 +3,11 @@ import ast
 
 
 def parse_python(source: str, path: str) -> dict:
-    tree = ast.parse(source)
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError):
+        return {"language": "Python", "file": path, "functions": [], "classes": [], "imports": [],
+                "parse_error": "Invalid Python syntax"}
     functions, classes, imports = [], [], []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

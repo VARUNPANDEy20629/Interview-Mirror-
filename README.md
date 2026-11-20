@@ -17,6 +17,22 @@
 
 </div>
 
+## MVP implementation status
+
+The local MVP now includes:
+
+- Password registration/login and `httpOnly` JWT cookie sessions
+- JSON-backed local persistence for users, repositories, interviews, answers and resumes
+- Python, Java and JavaScript symbol extraction
+- Repository analysis, architecture, symbol and graph APIs
+- Interview creation, answering, scoring and reports
+- Resume PDF upload validation and analysis metadata
+- Text-based speech metrics
+- Dashboard, weak-topic and progress APIs
+- A production-ready React/Vite frontend build
+
+GitHub OAuth and hosted Whisper transcription are intentionally credential-dependent and remain configuration-gated until credentials are supplied.
+
 ---
 
 ## 💡 The idea

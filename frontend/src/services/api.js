@@ -3,6 +3,7 @@ import * as mock from './mockData.js';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 const BASE = '/api/v1';
 const wait = (v, ms = 250) => new Promise((r) => setTimeout(() => r(v), ms));
+let activeInterviewId = null;
 
 async function request(path, options = {}) {
   const res = await fetch(BASE + path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
@@ -35,22 +36,33 @@ function demoEvaluate(question, answer) {
 }
 
 export const api = {
-  async login(email) {
+  async login(email, password) {
     if (USE_MOCK) return wait({ ...mock.demoUser, email });
-    return request('/auth/login', { method: 'POST', body: JSON.stringify({ email }) });
+    return request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
   },
-  async register(name, email) {
+  async register(name, email, password) {
     if (USE_MOCK) return wait({ name, email });
-    return request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email }) });
+    return request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
   },
   async repositories() { return USE_MOCK ? wait(mock.repos) : request('/github/repositories'); },
   async analyzeRepository(id) {
     if (USE_MOCK) return wait({ id, status: 'completed', files: 24, classes: 5, functions: 19 }, 1200);
     return request('/repositories/analyze', { method: 'POST', body: JSON.stringify({ repository_id: id }) });
   },
-  async questions() { return USE_MOCK ? wait(mock.questions) : request('/interviews/next-question'); },
+  async questions() {
+    if (USE_MOCK) return wait(mock.questions);
+    if (!activeInterviewId) {
+      const interview = await request('/interviews/create', { method: 'POST', body: JSON.stringify({ type: 'project-defense' }) });
+      activeInterviewId = interview.id;
+      await request(`/interviews/${activeInterviewId}/start`, { method: 'POST' });
+    }
+    const question = await request(`/interviews/${activeInterviewId}/next-question`);
+    return [question];
+  },
   async evaluate(question, answer) {
-    return USE_MOCK ? wait(demoEvaluate(question, answer), 500) : request('/interviews/answer', { method: 'POST', body: JSON.stringify({ question_id: question.id, answer }) });
+    return USE_MOCK
+      ? wait(demoEvaluate(question, answer), 500)
+      : request(`/interviews/${activeInterviewId}/answer`, { method: 'POST', body: JSON.stringify({ question_id: question.id, answer }) });
   },
   async dashboard() { return USE_MOCK ? wait({ history: mock.history, topics: mock.topics, insights: mock.insights }) : request('/analytics/dashboard'); },
 };

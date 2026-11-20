@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     github_client_secret: str = ""
     cors_origins: list[str] = ["http://localhost:5173"]
     max_resume_mb: int = 5
+    data_dir: str = "./data"
 
 
 settings = Settings()
